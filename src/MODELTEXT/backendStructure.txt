@@ -1,0 +1,58 @@
+backend/
+│── src/
+│   ├── controllers/       # Handles business logic
+│   │   ├── patientController.js
+│   │   ├── doctorController.js
+│   │   ├── adminController.js
+│   │   ├── appointmentController.js
+│   │   ├── authController.js
+│   │
+│   ├── models/            # Defines database schemas
+│   │   ├── patientModel.js
+│   │   ├── doctorModel.js
+│   │   ├── adminModel.js
+│   │   ├── appointmentModel.js
+│   │   ├── userModel.js
+│   │
+│   ├── routes/            # Defines API endpoints
+│   │   ├── patientRoutes.js
+│   │   ├── doctorRoutes.js
+│   │   ├── adminRoutes.js
+│   │   ├── appointmentRoutes.js
+│   │   ├── authRoutes.js
+│   │
+│   ├── middleware/        # Authentication & security
+│   │   ├── authMiddleware.js
+│   │
+│   ├── config/            # Database configuration
+│   │   ├── db.js
+│   │
+│── app.js                 # Main server file
+│── server.js              # Starts the Express server
+│── package.json
+│── .env
+
+
+🌟 How Requests Work (Example)
+A patient signs up at /api/auth/register
+The request goes to authRoutes.js, which calls authController.js
+The controller creates a new user in MongoDB
+The response returns success with a JWT token
+Later, the patient books an appointment at /api/patients/appointments
+The request checks authMiddleware.js to verify if the user is logged in
+If valid, the appointment is created in MongoDB
+🌟 Next Steps
+Set up your project
+
+Create the folder structure
+Install Express, Mongoose, dotenv, bcryptjs, jsonwebtoken
+Build authentication (signup & login) first
+
+Hash passwords
+Store user roles (patient, doctor, admin)
+Generate JWT tokens
+Build CRUD APIs for each user role
+
+Patients can book appointments
+Doctors can manage patients
+Admin can control everything

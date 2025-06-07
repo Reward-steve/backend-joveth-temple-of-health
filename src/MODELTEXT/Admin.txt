@@ -1,0 +1,179 @@
+const Admin = require("../models/UserModels/Admin");
+const User = require("../models/UserModels/User");
+
+const {
+  catchAsync,
+  handleNoResult,
+  handleNotFound,
+} = require("../Utils/reusableFunctions");
+
+// ✅ Get all admins
+exports.getAllAdmins = catchAsync(async (req, res, next) => {
+  const admins = await Admin.find({});
+  handleNoResult(admins, "No admins found", next);
+  res.status(200).json({
+    status: "success",
+    result: admins.length,
+    data: { admins },
+  });
+});
+
+// ✅ Create a new admin
+exports.createAdmin = catchAsync(async (req, res, next) => {
+  const { name, email, password, role, workSchedules, timeSlots, permissions } = req.body;
+
+  const newUser = await User.create({ name, email, password, role: "Admin" });
+
+  const newAdmin = await Admin.create({
+    userId: newUser._id,
+    role,
+    workSchedules,
+    timeSlots,
+    permissions,
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "Admin created successfully",
+    data: { newAdmin },
+  });
+});
+
+// ✅ Get a single admin by ID
+exports.getAdminById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const admin = await Admin.findById(id).populate("userId", "name email");
+
+  handleNotFound(admin, "Admin not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Admin retrieved successfully",
+    data: { admin },
+  });
+});
+
+// ✅ Update an admin
+exports.updateAdmin = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const updatedAdmin = await Admin.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  handleNotFound(updatedAdmin, "Admin not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Admin updated successfully",
+    data: { updatedAdmin },
+  });
+});
+
+// ✅ Delete an admin
+exports.deleteAdmin = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const admin = await Admin.findByIdAndDelete(id);
+
+  handleNotFound(admin, "Admin not found", next);
+
+  await User.findByIdAndDelete(admin.userId);
+
+  res.status(204).json({
+    status: "success",
+    message: "Admin deleted successfully",
+  });
+});
+
+
+
+
+
+
+/////////////////////
+
+const User = require("../models/UserModels/User");
+const { catchAsync, handleNoResult, handleNotFound } = require("../Utils/reusableFunctions");
+
+// ✅ View system stats
+exports.getDashboardStats = catchAsync(async (req, res, next) => {
+  // Example stats: total users, total doctors, total patients, etc.
+  const totalUsers = await User.countDocuments();
+  const totalDoctors = await User.countDocuments({ role: "Doctor" });
+  const totalPatients = await User.countDocuments({ role: "Patient" });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      totalUsers,
+      totalDoctors,
+      totalPatients,
+    },
+  });
+});
+
+// ✅ View all users
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find({});
+  handleNoResult(users, "No users found", next);
+  res.status(200).json({
+    status: "success",
+    result: users.length,
+    data: { users },
+  });
+});
+
+// ✅ Remove a user
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const user = await User.findByIdAndDelete(id);
+  handleNotFound(user, "User not found", next);
+
+  res.status(204).json({
+    status: "success",
+    message: "User deleted successfully",
+  });
+});
+
+// ✅ Modify system settings
+exports.updateSettings = catchAsync(async (req, res, next) => {
+  // Example settings: site name, contact email, etc.
+  const { siteName, contactEmail } = req.body;
+
+  // Assuming you have a Settings model to store system settings
+  const settings = await Settings.findOneAndUpdate({}, { siteName, contactEmail }, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Settings updated successfully",
+    data: { settings },
+  });
+});
+
+
+
+const express = require("express");
+const adminController = require("../controllers/adminController");
+
+const router = express.Router();
+
+// Route to view system stats
+router.get("/dashboard", adminController.getDashboardStats);
+
+// Route to view all users
+router.get("/users", adminController.getAllUsers);
+
+// Route to remove a user
+router.delete("/users/:id", adminController.deleteUser);
+
+// Route to modify system settings
+router.put("/settings", adminController.updateSettings);
+
+module.exports = router;

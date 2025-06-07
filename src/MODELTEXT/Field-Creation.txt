@@ -1,0 +1,88 @@
+//Patient
+{
+    "name": "Mary Weather",
+    "dateOfBirth": "2005-01-06T00:00:00.000Z",
+    "gender": "Female",
+    "phone": "+123-987-456",
+    "email": "patientone@gmail.com",
+    "age":23,
+    "password":"weatheringwithmary",
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Los Angeles",
+        "state": "California",
+        "country": "USA",
+        "zipCode": "90001"
+    },
+    "emergencyContact": {
+        "name": "John Weather",
+        "relationship": "Parent",
+        "phone": "+123-555-789"
+    }
+}
+
+
+//doctor
+{
+  "name": "Dr. Michael Johnson",
+  "email": "michael.johnson@example.com",
+  "password": "doctorMichael",  
+  "role": "Doctor",
+  "department": "Medical",
+  "specialization": "Cardiologist",
+  "experience": 12,
+  "qualifications": [
+    "MBBS - University of Lagos",
+    "MD - Cardiology, Harvard Medical School",
+    "FACC - Fellow of the American College of Cardiology"
+  ],
+  "availability": [
+    { "day": "Monday", "timeSlots": [{ "startTime": "08:00", "endTime": "12:00" }] },
+    { "day": "Tuesday", "timeSlots": [{ "startTime": "14:00", "endTime": "18:00" }] },
+    { "day": "Thursday", "timeSlots": [{ "startTime": "08:00", "endTime": "12:00" }] },
+    { "day": "Friday", "timeSlots": [{ "startTime": "14:00", "endTime": "18:00" }] }
+  ],
+  "salary": {
+    "amount": 120000,
+    "currency": "USD"
+  }
+}
+
+
+
+//Admin
+{
+  "name": "Sophia Carter",
+  "email": "sophia.carter@example.com",
+  "password": "sophiaRecp",
+  "role": "Admin",
+  "department": "Emergency",
+  "adminRole":"Receptionist"
+}
+
+
+
+//medicalHistory
+//Here's a sample medical history document filled with realistic data based on your schema:
+{
+  "patientId": "67d1a9bef09c90ad02a11b20",
+  "doctorId": "67d178c974ba75a3774a29ca",
+  "nurseId": "67d33cf9194b8aded1559e3a",
+  "diagnosis": "Type 2 Diabetes Mellitus",
+  "medicalHistory": {
+    "bloodGroup": "O+",
+    "allergies": ["Penicillin", "Peanuts"],
+    "pastDiseases": ["Hypertension", "Gastritis"]
+  },
+  "treatments": [
+    "Lifestyle modifications (diet and exercise)",
+    "Blood sugar monitoring",
+    "Routine endocrinology visits"
+  ],
+  "medications": [
+    "Metformin 500mg (twice daily)",
+    "Glipizide 5mg (once daily before breakfast)"
+  ],
+  "status": "Ongoing"
+}
+

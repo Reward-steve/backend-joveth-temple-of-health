@@ -1,0 +1,195 @@
+1. Install Multer: Multer is a middleware for handling multipart/form-data, which is primarily used for uploading files.
+
+2. Set Up Multer
+Create a new file called multerConfig.js in your utils directory to configure Multer.
+const multer = require("multer");
+const path = require("path");
+
+// Set storage engine
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+  },
+});
+
+// Initialize upload
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1000000 }, // 1MB limit
+  fileFilter: function (req, file, cb) {
+    checkFileType(file, cb);
+  },
+});
+
+// Check file type
+function checkFileType(file, cb) {
+  const filetypes = /jpeg|jpg|png/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb("Error: Images Only!");
+  }
+}
+
+module.exports = upload;
+
+
+3. Update User Model
+Add a field for the profile picture URL in the user model.
+
+const mongoose = require("mongoose");
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 8,
+    select: false,
+  },
+  phone: {
+    type: String,
+    required: true,
+  },
+  role: {
+    type: String,
+    enum: ["Admin", "Doctor", "Nurse", "Patient", "LabTechnician", "Pharmacist"],
+    required: true,
+  },
+  profilePicture: {
+    type: String,
+  },
+}, { timestamps: true });
+
+const User = mongoose.model("User", userSchema);
+module.exports = User;
+
+
+4. Create Controller Functions: 
+Create a new file called profileController.js in your controllers directory to handle the file upload and update the user's profile picture URL.
+
+const User = require("../models/UserModels/User");
+const { catchAsync, handleNotFound } = require("../Utils/reusableFunctions");
+
+// ✅ Upload profile picture
+exports.uploadProfilePicture = catchAsync(async (req, res, next) => {
+  const { id } = req.user;
+
+  if (!req.file) {
+    return next(new AppError("Please upload a file", 400));
+  }
+
+  const user = await User.findByIdAndUpdate(id, { profilePicture: req.file.path }, {
+    new: true,
+    runValidators: true,
+  });
+
+  handleNotFound(user, "User not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Profile picture uploaded successfully",
+    data: { user },
+  });
+});
+
+
+5. Create Routes:
+Create a new file called profileRoutes.js in your routes directory and define the routes for uploading the profile picture.
+
+const express = require("express");
+const profileController = require("../controllers/profileController");
+const upload = require("../utils/multerConfig");
+
+const router = express.Router();
+
+// Route to upload profile picture
+router.post("/upload", upload.single("profilePicture"), profileController.uploadProfilePicture);
+
+module.exports = router;
+
+6. Integrate Profile Routes in app.js
+In your main application file (e.g., app.js), import and use the profileRoutes.
+
+const express = require("express");
+const cors = require("cors");
+const { AppError } = require("./src/Utils/reusableFunctions.js");
+const Auth = require("./src/Routes/Auth.js");
+const Patient = require("./src/Routes/Patient.js");
+const Doctor = require("./src/Routes/Doctor.js");
+const Lab = require("./src/Routes/Lab.js");
+const Appointment = require("./src/Routes/Appointment.js");
+const Admin = require("./src/Routes/Admin.js");
+const MedicalRecord = require("./src/Routes/MedicalRecord.js");
+const Billing = require("./src/Routes/Billing.js");
+const Pharmacy = require("./src/Routes/Pharmacy.js");
+const Message = require("./src/Routes/Message.js");
+const Profile = require("./src/Routes/profileRoutes.js"); // Add this line
+const errorHandler = require("./src/middleware/errorHandler.js");
+const cookieParser = require("cookie-parser");
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+app.use(cookieParser());
+
+// Serve static files from the "uploads" directory
+app.use("/uploads", express.static("uploads"));
+
+app.use(
+  cors({
+    origin: true,
+    // methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+app.options("*", cors());
+
+app.use("/auth", Auth);
+app.use("/admin", Admin);
+app.use("/patients", Patient);
+app.use("/doctors", Doctor);
+app.use("/pharmacy", Pharmacy);
+app.use("/lab-tests", Lab);
+app.use("/billing", Billing);
+app.use("/records", MedicalRecord);
+app.use("/appointments", Appointment);
+app.use("/messages", Message);
+app.use("/profile", Profile); // Add this line
+
+app.all("*", (req, res, next) => {
+  next(new AppError(`Cannot find ${req.originalUrl} on server`, 404));
+});
+
+app.use(errorHandler);
+app.use((err, req, res, next) => {
+  console.error("ERROR:", err);
+
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || "error";
+
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
+  });
+});
+
+module.exports = app;

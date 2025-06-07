@@ -1,0 +1,33 @@
+🌍 API Endpoints
+Here’s an overview of important API routes:
+
+🧑‍⚕️ Patient Routes
+Method	            Route	                        Description
+POST	            /api/patients/register	        Register a new patient
+POST	            /api/patients/login	            Patient login (JWT Auth)
+GET	                /api/patients/:id	            Get patient details
+PUT	                /api/patients/:id	            Update patient info
+DELETE	            /api/patients/:id	            Delete patient profile
+
+👨‍⚕️ Doctor Routes
+Method	            Route	                        Description
+POST	            /api/doctors/register	        Register a new doctor
+POST                /api/doctors/login	            Doctor login (JWT Auth)
+GET	                /api/doctors/:id	            Get doctor profile
+PUT	                /api/doctors/:id	            Update doctor details
+GET	                /api/doctors	                Get all doctors
+
+📅 Appointment Routes
+Method	            Route	                        Description
+POST	            /api/appointments/book	        Book an appointment
+GET	                /api/appointments/:id	        Get appointment details
+PUT	                /api/appointments/:id	        Update appointment status
+DELETE	            /api/appointments/:id	        Cancel appointment
+
+
+🧑‍💻Admin Routes
+Method	            Route	                        Description
+GET	                /api/admin/users	            Get all doctors & patients
+DELETE	            /api/admin/users/:id	        Cancel appointment
+GET	                /api/admin/appointments	        Get appointment details
+   

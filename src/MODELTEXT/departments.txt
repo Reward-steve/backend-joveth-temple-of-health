@@ -1,0 +1,69 @@
+Doctors can work in various medical departments, depending on their specialization.
+Here are the major hospital departments along with their roles:
+
+1. Surgical Departments
+General Surgery – Handles common surgical procedures.
+Orthopedic Surgery – Treats bones, joints, and muscles.
+Neurosurgery – Specializes in brain and nervous system surgery.
+Cardiothoracic Surgery – Focuses on heart and lung surgeries.
+Plastic Surgery – Includes reconstructive and cosmetic procedures.
+Ophthalmic Surgery – Specializes in eye surgeries.
+
+2. Medical Departments
+Internal Medicine – General adult healthcare.
+Cardiology – Treats heart-related conditions.
+Pulmonology – Focuses on lung and respiratory diseases.
+Gastroenterology – Deals with digestive system disorders.
+Nephrology – Specializes in kidney-related issues.
+Endocrinology – Treats hormonal and metabolic disorders (e.g., diabetes).
+Rheumatology – Focuses on arthritis and autoimmune diseases.
+
+3. Emergency & Intensive Care Departments
+Emergency Medicine – Handles critical and life-threatening conditions.
+Intensive Care Unit (ICU) – Treats critically ill patients.
+Anesthesiology – Manages pain relief and anesthesia during surgery.
+
+4. Pediatric Departments
+Pediatrics – General child healthcare.
+Neonatology – Specializes in newborns and premature babies.
+Pediatric Surgery – Surgical care for children.
+
+5. Obstetrics & Gynecology (OB-GYN)
+Obstetrics – Manages pregnancy and childbirth.
+Gynecology – Treats female reproductive system disorders.
+
+6. Mental Health & Neurology
+Psychiatry – Treats mental health disorders.
+Neurology – Specializes in nervous system diseases.
+
+7. Oncology (Cancer Treatment)
+Medical Oncology – Uses chemotherapy and targeted therapies.
+Radiation Oncology – Treats cancer with radiation.
+Surgical Oncology – Performs cancer-related surgeries.
+
+8. Dermatology & Venereology
+Dermatology – Treats skin, hair, and nail diseases.
+Venereology – Focuses on sexually transmitted infections (STIs).
+
+9. Infectious Diseases
+Manages conditions like tuberculosis, HIV/AIDS, and COVID-19.
+
+10. Radiology & Imaging
+Radiology – Uses imaging (X-rays, CT scans, MRI) for diagnosis.
+Nuclear Medicine – Uses radioactive materials for treatment and diagnosis.
+
+11. Pathology & Laboratory Medicine
+Pathology – Examines tissues and fluids for disease diagnosis.
+Microbiology – Studies bacteria, viruses, and infections.
+
+12. Physical Medicine & Rehabilitation
+Helps patients recover from injuries and surgeries.
+
+13. Urology
+Treats urinary tract diseases and male reproductive issues.
+
+14. Ophthalmology (Eye Care)
+Treats eye diseases and performs eye surgeries.
+
+15. Otolaryngology (ENT - Ear, Nose, Throat)
+Treats ENT disorders and performs related surgeries.

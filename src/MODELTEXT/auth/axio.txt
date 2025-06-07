@@ -1,0 +1,273 @@
+📌 Axios Cheat Sheet (with Examples)
+Axios is a promise-based HTTP client that simplifies API calls in JavaScript and TypeScript. It’s more powerful and flexible than fetch. Below is a complete guide to using Axios.
+
+1️⃣ Installing Axios
+If you haven’t installed it yet, run:
+
+sh
+Copy code
+npm install axios
+Then, import it in your files:
+
+ts
+Copy code
+import axios from "axios";
+2️⃣ Making Requests with Axios
+🔹 GET Request
+ts
+Copy code
+axios.get("https://jsonplaceholder.typicode.com/posts")
+  .then(response => console.log(response.data))
+  .catch(error => console.error(error));
+No need to convert response.json(), Axios does it automatically.
+🔹 POST Request (Sending Data)
+ts
+Copy code
+axios.post("https://jsonplaceholder.typicode.com/posts", {
+    title: "Hello World",
+    body: "This is a test post",
+    userId: 1
+  })
+  .then(response => console.log(response.data))
+  .catch(error => console.error(error));
+🔹 PUT Request (Updating Data)
+ts
+Copy code
+axios.put("https://jsonplaceholder.typicode.com/posts/1", {
+    title: "Updated Title",
+    body: "Updated body",
+    userId: 1
+  })
+  .then(response => console.log(response.data))
+  .catch(error => console.error(error));
+🔹 PATCH Request (Updating Partial Data)
+ts
+Copy code
+axios.patch("https://jsonplaceholder.typicode.com/posts/1", {
+    title: "Updated Only Title"
+  })
+  .then(response => console.log(response.data))
+  .catch(error => console.error(error));
+🔹 DELETE Request
+ts
+Copy code
+axios.delete("https://jsonplaceholder.typicode.com/posts/1")
+  .then(response => console.log("Deleted Successfully"))
+  .catch(error => console.error(error));
+3️⃣ Using Axios with Async/Await
+Instead of .then(), you can use async/await for cleaner code:
+
+ts
+Copy code
+async function fetchData() {
+  try {
+    const response = await axios.get("https://jsonplaceholder.typicode.com/posts");
+    console.log(response.data);
+  } catch (error) {
+    console.error("Error fetching data", error);
+  }
+}
+fetchData();
+4️⃣ Handling Headers
+You can send custom headers like this:
+
+ts
+Copy code
+axios.get("https://api.example.com/data", {
+  headers: {
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+    "Content-Type": "application/json"
+  }
+})
+  .then(response => console.log(response.data))
+  .catch(error => console.error(error));
+5️⃣ Sending Cookies with Requests (withCredentials)
+Since you're using cookies for authentication, you need to enable credentials in Axios:
+
+ts
+Copy code
+axios.defaults.withCredentials = true;
+or per request:
+
+ts
+Copy code
+axios.post("http://localhost:5000/api/v1/auth/login", { email, password }, {
+  withCredentials: true
+})
+.then(response => console.log(response.data))
+.catch(error => console.error(error));
+This ensures cookies (e.g., session tokens) are sent and received properly.
+
+6️⃣ Creating an Axios Instance
+Instead of writing the baseURL and headers every time, create an Axios instance:
+
+ts
+Copy code
+const api = axios.create({
+  baseURL: "http://localhost:5000/api/v1",
+  withCredentials: true, // Include cookies
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
+// Use it for requests
+api.get("/users")
+  .then(res => console.log(res.data))
+  .catch(err => console.error(err));
+7️⃣ Handling Errors
+Axios provides better error handling:
+
+ts
+Copy code
+try {
+  const response = await axios.get("https://api.example.com/data");
+  console.log(response.data);
+} catch (error) {
+  if (error.response) {
+    // Server responded with an error (4xx or 5xx)
+    console.error("Error:", error.response.data);
+  } else if (error.request) {
+    // No response received
+    console.error("No response received:", error.request);
+  } else {
+    // Other errors
+    console.error("Error:", error.message);
+  }
+}
+8️⃣ Canceling Requests
+You can cancel a request if it's no longer needed:
+
+ts
+Copy code
+const controller = new AbortController();
+
+axios.get("https://jsonplaceholder.typicode.com/posts", {
+  signal: controller.signal
+}).then(res => console.log(res.data))
+  .catch(err => console.error("Request canceled:", err.message));
+
+// Cancel the request
+controller.abort();
+9️⃣ Interceptors (For Auth & Global Handling)
+Interceptors allow you to modify requests before they are sent or handle errors globally.
+
+Request Interceptor
+Automatically add an Authorization token to all requests:
+
+ts
+Copy code
+axios.interceptors.request.use(
+  (config) => {
+    config.headers["Authorization"] = `Bearer YOUR_ACCESS_TOKEN`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+Response Interceptor
+Automatically handle errors globally:
+
+ts
+Copy code
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response.status === 401) {
+      console.error("Unauthorized! Redirecting to login...");
+    }
+    return Promise.reject(error);
+  }
+);
+🔟 Uploading Files with Axios
+ts
+Copy code
+const formData = new FormData();
+formData.append("file", selectedFile);
+
+axios.post("https://api.example.com/upload", formData, {
+  headers: { "Content-Type": "multipart/form-data" }
+})
+.then(res => console.log("File uploaded:", res.data))
+.catch(err => console.error(err));
+🔥 Final Thoughts
+✅ Axios is easier to use than Fetch
+✅ Better error handling & auto JSON parsing
+✅ Supports authentication (cookies, tokens)
+✅ Handles file uploads & cancellations
+
+If you're building a real-world app with authentication (cookies/tokens), Axios is the way to go! 🚀 Let me know if you need help implementing it in your project. 😊
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////
+
+
+Rewritten API Provider with Axios
+tsx
+Copy code
+import { useState } from "react";
+import axios from "axios";
+import { ApiContext } from "./createApi";
+
+export interface ApiContexType {
+  message: string;
+  data: object | null;
+  isLoading: boolean;
+  error: { message: string };
+  api: (body: object, method: string, urlRoute: string) => Promise<void>;
+}
+
+const API_URL = "http://localhost:5000/api/v1/";
+
+export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [message, setMessage] = useState<string>("");
+  const [data, setData] = useState<object | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<{ message: string }>({ message: "" });
+
+  const api = async (body: object, method: string, urlRoute: string) => {
+    setIsLoading(true);
+    try {
+      const response = await axios({
+        method, // "POST", "GET", etc.
+        url: `${API_URL}${urlRoute}`,
+        data: body,
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true, // If using cookies for authentication
+      });
+
+      setMessage(response.data.message);
+      setData(response.data);
+    } catch (error) {
+      setError({
+        message: axios.isAxiosError(error)
+          ? error.response?.data?.message || error.message
+          : "Unknown error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <ApiContext.Provider value={{ message, data, isLoading, error, api }}>
+      {children}
+    </ApiContext.Provider>
+  );
+};
+Key Benefits of Axios:
+Automatic JSON Handling: No need to manually parse response.json().
+Better Error Handling: Axios automatically throws errors for failed HTTP requests.
+Shorter Code: It simplifies headers and request configuration.
+Supports Cookies Easily: withCredentials: true allows session-based authentication.
+More Features: Axios allows request/response interceptors, cancellation, timeouts, etc.
+Now, anytime you need to make a request, you can call:
+
+tsx
+Copy code
+api({ email, password }, "POST", "auth/login");
+Let me know if you need more help! 🚀

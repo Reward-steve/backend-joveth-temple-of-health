@@ -1,0 +1,109 @@
+const mongoose = require("mongoose");
+
+const messageSchema = new mongoose.Schema({
+  senderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  receiverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+  read: {
+    type: Boolean,
+    default: false,
+  },
+}, { timestamps: true });
+
+const Message = mongoose.model("Message", messageSchema);
+module.exports = Message;
+
+
+const Message = require("../models/Message");
+const { catchAsync, handleNoResult, handleNotFound } = require("../Utils/reusableFunctions");
+
+// ✅ Send a new message
+exports.sendMessage = catchAsync(async (req, res, next) => {
+  const { senderId, receiverId, content } = req.body;
+
+  const newMessage = await Message.create({
+    senderId,
+    receiverId,
+    content,
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "Message sent successfully",
+    data: { newMessage },
+  });
+});
+
+// ✅ Get all messages for a specific user
+exports.getMessagesByUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const messages = await Message.find({
+    $or: [{ senderId: userId }, { receiverId: userId }],
+  }).populate("senderId", "name email").populate("receiverId", "name email");
+
+  handleNoResult(messages, "No messages found for this user", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Messages retrieved successfully",
+    result: messages.length,
+    data: { messages },
+  });
+});
+
+// ✅ Mark a message as read
+exports.markMessageAsRead = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const updatedMessage = await Message.findByIdAndUpdate(id, { read: true }, {
+    new: true,
+    runValidators: true,
+  });
+
+  handleNotFound(updatedMessage, "Message not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Message marked as read",
+    data: { updatedMessage },
+  });
+});
+
+
+const express = require("express");
+const messageController = require("../controllers/Message");
+
+const router = express.Router();
+
+// Route to send a new message
+router.post("/", messageController.sendMessage);
+
+// Route to get all messages for a specific user
+router.get("/user/:userId", messageController.getMessagesByUser);
+
+// Route to mark a message as read
+router.patch("/:id/read", messageController.markMessageAsRead);
+
+module.exports = router;
+
+
+Message Model: Defines the schema for storing messages between users.
+Message Controller: Handles the logic for sending, retrieving, and updating messages.
+Message Routes: Defines the routes for the Message controller.
+Use Message Routes in app.js: Imports and uses the messageRoutes in your main application file.

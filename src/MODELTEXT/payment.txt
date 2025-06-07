@@ -1,0 +1,114 @@
+const Payment = require("../models/Billing/Payment");
+const Invoice = require("../models/Billing/Invoice");
+const Patient = require("../models/UserModels/Patient");
+
+const {
+  catchAsync,
+  handleNoResult,
+  handleNotFound,
+} = require("../Utils/reusableFunctions");
+
+// ✅ Create a new payment and update invoice status
+exports.createPayment = catchAsync(async (req, res, next) => {
+  const { patientId, invoiceId, amountPaid, paymentMethod } = req.body;
+
+  // Find the invoice
+  const invoice = await Invoice.findById(invoiceId);
+  handleNotFound(invoice, "Invoice not found", next);
+
+  // Create a new payment
+  const newPayment = await Payment.create({
+    patientId,
+    invoiceId,
+    amountPaid,
+    paymentMethod,
+  });
+
+  // Update the invoice status to "Paid" if the total amount is paid
+  if (amountPaid >= invoice.totalAmount) {
+    invoice.status = "Paid";
+  } else {
+    invoice.status = "Partially Paid";
+  }
+  await invoice.save();
+
+  res.status(201).json({
+    status: "success",
+    message: "Payment created successfully and invoice status updated",
+    data: { newPayment },
+  });
+});
+
+// ✅ Get all payments for a specific patient
+exports.getPaymentsByPatient = catchAsync(async (req, res, next) => {
+  const { patientId } = req.params;
+
+  const payments = await Payment.find({ patientId }).populate("invoiceId", "totalAmount status");
+
+  handleNoResult(payments, "No payments found for this patient", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Payments retrieved successfully",
+    result: payments.length,
+    data: { payments },
+  });
+});
+
+// ✅ Get all payments for a specific invoice
+exports.getPaymentsByInvoice = catchAsync(async (req, res, next) => {
+  const { invoiceId } = req.params;
+
+  const payments = await Payment.find({ invoiceId }).populate("patientId", "name email");
+
+  handleNoResult(payments, "No payments found for this invoice", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Payments retrieved successfully",
+    result: payments.length,
+    data: { payments },
+  });
+});
+
+
+
+
+Explanation
+Creating a Payment and Updating Invoice Status:
+
+The createPayment function creates a new payment and updates the corresponding invoice status.
+It first finds the invoice using the invoiceId provided in the request body.
+It then creates a new payment document with the provided details.
+If the amountPaid is greater than or equal to the totalAmount of the invoice, it updates the invoice status to "Paid". Otherwise, it updates the status to "Partially Paid".
+Finally, it saves the updated invoice and returns the new payment in the response.
+Getting Payments for a Specific Patient:
+
+The getPaymentsByPatient function retrieves all payments made by a specific patient.
+It uses the populate method to include the totalAmount and status of the associated invoice in the response.
+Getting Payments for a Specific Invoice:
+
+The getPaymentsByInvoice function retrieves all payments made for a specific invoice.
+It uses the populate method to include the name and email of the associated patient in the response.
+Summary
+Creating a Payment: The createPayment function creates a new payment and updates the corresponding invoice status.
+Retrieving Payments: The getPaymentsByPatient and getPaymentsByInvoice functions retrieve payments and use the populate method to include related information from other models.
+
+
+//Routes
+
+const express = require("express");
+const paymentController = require("../controllers/paymentController");
+
+const router = express.Router();
+
+// Route to create a new payment and update invoice status
+router.post("/", paymentController.createPayment);
+
+// Route to get all payments for a specific patient
+router.get("/patient/:patientId", paymentController.getPaymentsByPatient);
+
+// Route to get all payments for a specific invoice
+router.get("/invoice/:invoiceId", paymentController.getPaymentsByInvoice);
+
+module.exports = router;

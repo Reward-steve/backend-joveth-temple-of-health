@@ -1,0 +1,135 @@
+Fields in the Pharmacist Model
+licenseNumber: This field stores the pharmacist's license number.
+qualifications: This field stores a list of the pharmacist's degrees and certifications.
+workSchedules: This field stores an array of objects representing the pharmacist's work schedule for each day of the week.
+timeSlots: This field stores an array of objects representing the pharmacist's work time slots for each day.
+Summary
+Purpose: The Pharmacist model is used to manage information specific to pharmacists, such as their license number, qualifications, work schedules, and time slots.
+Fields:
+licenseNumber: The pharmacist's license number.
+qualifications: A list of the pharmacist's degrees and certifications.
+workSchedules: An array of objects representing the pharmacist's work schedule for each day of the week.
+timeSlots: An array of objects representing the pharmacist's work time slots for each day.
+This model ensures that information specific to pharmacists is properly managed and tracked within the system.
+
+Similar code found with 1 license type - View matches
+
+
+//Controller
+const Pharmacist = require("../models/UserModels/Pharmacist");
+const { catchAsync, handleNoResult, handleNotFound } = require("../Utils/reusableFunctions");
+
+// ✅ Get all pharmacists
+exports.getAllPharmacists = catchAsync(async (req, res, next) => {
+  const pharmacists = await Pharmacist.find({});
+  handleNoResult(pharmacists, "No pharmacists found", next);
+  res.status(200).json({
+    status: "success",
+    result: pharmacists.length,
+    data: { pharmacists },
+  });
+});
+
+// ✅ Create a new pharmacist
+exports.createPharmacist = catchAsync(async (req, res, next) => {
+  const { name, email, password, licenseNumber, qualifications, workSchedules, timeSlots } = req.body;
+
+  const newPharmacist = await Pharmacist.create({
+    name,
+    email,
+    password,
+    licenseNumber,
+    qualifications,
+    workSchedules,
+    timeSlots,
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "Pharmacist created successfully",
+    data: { newPharmacist },
+  });
+});
+
+// ✅ Get a single pharmacist by ID
+exports.getPharmacistById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const pharmacist = await Pharmacist.findById(id);
+
+  handleNotFound(pharmacist, "Pharmacist not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Pharmacist retrieved successfully",
+    data: { pharmacist },
+  });
+});
+
+// ✅ Update a pharmacist
+exports.updatePharmacist = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const updatedPharmacist = await Pharmacist.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  handleNotFound(updatedPharmacist, "Pharmacist not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Pharmacist updated successfully",
+    data: { updatedPharmacist },
+  });
+});
+
+// ✅ Delete a pharmacist
+exports.deletePharmacist = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const pharmacist = await Pharmacist.findByIdAndDelete(id);
+
+  handleNotFound(pharmacist, "Pharmacist not found", next);
+
+  res.status(204).json({
+    status: "success",
+    message: "Pharmacist deleted successfully",
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pharmacist routes
+
+const express = require("express");
+const pharmacistController = require("../controllers/pharmacistController");
+
+const router = express.Router();
+
+// Route to get all pharmacists
+router.get("/", pharmacistController.getAllPharmacists);
+
+// Route to create a new pharmacist
+router.post("/", pharmacistController.createPharmacist);
+
+// Route to get a single pharmacist by ID
+router.get("/:id", pharmacistController.getPharmacistById);
+
+// Route to update a pharmacist
+router.patch("/:id", pharmacistController.updatePharmacist);
+
+// Route to delete a pharmacist
+router.delete("/:id", pharmacistController.deletePharmacist);
+
+module.exports = router;

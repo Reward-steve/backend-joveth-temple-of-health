@@ -1,0 +1,312 @@
+const roles = {
+  SuperAdmin: [
+    "manage_users",
+    "manage_rooms",
+    "manage_appointments",
+    "view_reports",
+    "manage_settings",
+  ],
+  HOD: ["manage_appointments", "view_reports"],
+  Receptionist: ["manage_appointments"],
+};
+
+module.exports = roles;
+
+const mongoose = require("mongoose");
+const User = require("./User");
+
+const adminSchema = new mongoose.Schema({
+  role: {
+    type: String,
+    enum: ["SuperAdmin", "HOD", "Receptionist"],
+    required: true,
+  },
+  workSchedules: [
+    {
+      day: {
+        type: String,
+        enum: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ],
+        required: true,
+      },
+    },
+  ],
+  timeSlots: [
+    {
+      startTime: {
+        type: String,
+        required: true,
+        validate: {
+          validator: function (v) {
+            return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
+          },
+          message: (props) => `${props.value} is not a valid time format!`,
+        },
+      },
+      endTime: {
+        type: String,
+        required: true,
+        validate: {
+          validator: function (v) {
+            return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
+          },
+          message: (props) => `${props.value} is not a valid time format!`,
+        },
+      },
+    },
+  ],
+  permissions: [
+    {
+      type: String,
+      enum: [
+        "manage_users",
+        "manage_rooms",
+        "manage_appointments",
+        "view_reports",
+        "manage_settings",
+      ],
+    },
+  ],
+});
+
+const Admin = User.discriminator("Admin", adminSchema);
+module.exports = Admin;
+
+const AppError = require("../utils/appError");
+const roles = require("../config/roles");
+
+const authorize = (requiredPermissions) => {
+  return (req, res, next) => {
+    const userRole = req.user.role;
+    const userPermissions = roles[userRole];
+
+    const hasPermission = requiredPermissions.every((permission) =>
+      userPermissions.includes(permission)
+    );
+
+    if (!hasPermission) {
+      return next(new AppError("You do not have permission to perform this action", 403));
+    }
+
+    next();
+  };
+};
+
+module.exports = authorize;
+
+const Admin = require("../models/UserModels/Admin");
+const Receptionist = require("../models/UserModels/Receptionist");
+const { catchAsync, handleNoResult, handleNotFound } = require("../Utils/reusableFunctions");
+
+// ✅ Assign receptionist to a department
+exports.assignReceptionist = catchAsync(async (req, res, next) => {
+  const { receptionistId, department, assignedUntil } = req.body;
+
+  const receptionist = await Receptionist.findByIdAndUpdate(
+    receptionistId,
+    { department, assignedUntil },
+    { new: true, runValidators: true }
+  );
+
+  handleNotFound(receptionist, "Receptionist not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Receptionist assigned successfully",
+    data: { receptionist },
+  });
+});
+
+// ✅ Get all admins
+exports.getAllAdmins = catchAsync(async (req, res, next) => {
+  const admins = await Admin.find({});
+  handleNoResult(admins, "No admins found", next);
+  res.status(200).json({
+    status: "success",
+    result: admins.length,
+    data: { admins },
+  });
+});
+
+// ✅ Create a new admin
+exports.createAdmin = catchAsync(async (req, res, next) => {
+  const { name, email, password, role, workSchedules, timeSlots, permissions } = req.body;
+
+  const newAdmin = await Admin.create({
+    name,
+    email,
+    password,
+    role,
+    workSchedules,
+    timeSlots,
+    permissions,
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "Admin created successfully",
+    data: { newAdmin },
+  });
+});
+
+// ✅ Get a single admin by ID
+exports.getAdminById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const admin = await Admin.findById(id);
+
+  handleNotFound(admin, "Admin not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Admin retrieved successfully",
+    data: { admin },
+  });
+});
+
+// ✅ Update an admin
+exports.updateAdmin = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const updatedAdmin = await Admin.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  handleNotFound(updatedAdmin, "Admin not found", next);
+
+  res.status(200).json({
+    status: "success",
+    message: "Admin updated successfully",
+    data: { updatedAdmin },
+  });
+});
+
+// ✅ Delete an admin
+exports.deleteAdmin = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const admin = await Admin.findByIdAndDelete(id);
+
+  handleNotFound(admin, "Admin not found", next);
+
+  res.status(204).json({
+    status: "success",
+    message: "Admin deleted successfully",
+  });
+});
+
+const express = require("express");
+const adminController = require("../controllers/adminController");
+const authorize = require("../middleware/authorize");
+
+const router = express.Router();
+
+// Route to get all admins
+router.get("/", authorize(["manage_users"]), adminController.getAllAdmins);
+
+// Route to create a new admin
+router.post("/", authorize(["manage_users"]), adminController.createAdmin);
+
+// Route to get a single admin by ID
+router.get("/:id", authorize(["manage_users"]), adminController.getAdminById);
+
+// Route to update an admin
+router.patch("/:id", authorize(["manage_users"]), adminController.updateAdmin);
+
+// Route to delete an admin
+router.delete("/:id", authorize(["manage_users"]), adminController.deleteAdmin);
+
+// Route to assign receptionist to a department
+router.post("/receptionists/assign", authorize(["manage_users"]), adminController.assignReceptionist);
+
+module.exports = router;
+
+
+const express = require("express");
+const cors = require("cors");
+const { AppError } = require("./src/Utils/reusableFunctions.js");
+const Auth = require("./src/Routes/Auth.js");
+const Patient = require("./src/Routes/Patient.js");
+const Doctor = require("./src/Routes/Doctor.js");
+const Lab = require("./src/Routes/Lab.js");
+const Appointment = require("./src/Routes/Appointment.js");
+const Admin = require("./src/Routes/Admin.js");
+const MedicalRecord = require("./src/Routes/MedicalRecord.js");
+const Billing = require("./src/Routes/Billing.js");
+const Pharmacy = require("./src/Routes/Pharmacy.js");
+const Message = require("./src/Routes/Message.js");
+const Profile = require("./src/Routes/profileRoutes.js");
+const Pharmacist = require("./src/Routes/pharmacistRoutes.js");
+const Prescription = require("./src/Routes/prescriptionRoutes.js");
+const errorHandler = require("./src/middleware/errorHandler.js");
+const cookieParser = require("cookie-parser");
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+app.use(cookieParser());
+
+// Serve static files from the "uploads" directory
+app.use("/uploads", express.static("uploads"));
+
+app.use(
+  cors({
+    origin: true,
+    // methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+app.options("*", cors());
+
+app.use("/api/v1/auth", Auth);
+app.use("/api/v1/admins", Admin);
+app.use("/api/v1/patients", Patient);
+app.use("/api/v1/doctors", Doctor);
+app.use("/api/v1/pharmacies", Pharmacy);
+app.use("/api/v1/lab-tests", Lab);
+app.use("/api/v1/billing", Billing);
+app.use("/api/v1/records", MedicalRecord);
+app.use("/api/v1/appointments", Appointment);
+app.use("/api/v1/prescriptions", Prescription);
+app.use("/api/v1/messages", Message);
+app.use("/api/v1/profile", Profile);2
+app.use("/api/v1/pharmacists", Pharmacist);
+
+app.all("*", (req, res, next) => {
+  next(new AppError(`Cannot find ${req.originalUrl} on server`, 404));
+});
+
+app.use(errorHandler);
+app.use((err, req, res, next) => {
+  console.error("ERROR:", err);
+
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || "error";
+
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
+  });
+});
+
+module.exports = app;
+
+
+Summary
+Admin Model: Your Admin model includes roles, work schedules, time slots, and permissions.
+Authorization Middleware: Middleware to check if a user has the required permissions to perform an action.
+Receptionist Model: Defines the schema for storing receptionist information and their department assignments.
+Admin Controller: Handles the logic for managing admins and receptionist assignments.
+Admin Routes: Defines the routes for the Admin controller.
+Integrate Routes in app.js: Imports and uses the adminRoutes in your main application file.
+This setup ensures that you can manage different roles and permissions for admins and handle the dynamic assignment of receptionists to different departments.
