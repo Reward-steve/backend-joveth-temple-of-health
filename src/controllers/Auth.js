@@ -227,9 +227,10 @@ const forgottenPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   await sendResetPasswordEmail(resetToken, user.username, email);
+
   res.status(200).json({
     status: "success",
-    message: "Email successfully sent",
+    message: "A reset password link has been sent to your email",
   });
 });
 
@@ -237,30 +238,50 @@ const resetPassword = catchAsync(async (req, res, next) => {
   const { token } = req.params;
   const { password } = req.body;
 
-  if (!password) {
-    return next(new AppError("New password is required", 400));
-  }
+  if (!token) return next(new AppError("Reset token is required", 400));
+  if (!password) return next(new AppError("New password is required", 400));
 
   const encryptedToken = hashedToken(token);
 
-  const user = await User.findOne({
-    passwordResetToken: encryptedToken,
-  });
+  const user = await User.findOne({ passwordResetToken: encryptedToken });
 
-  if (!user || !user.tokenExp || user.tokenExp < Date.now()) {
-    return next(new AppError("Invalid or expired reset token", 400));
+  if (!user) {
+    return next(
+      new AppError(
+        "Failed to reset password. Token is invalid or expired.",
+        400
+      )
+    );
+  }
+
+  const isExpired =
+    user.tokenExp instanceof Date
+      ? user.tokenExp.getTime() < Date.now()
+      : user.tokenExp < Date.now();
+
+  if (!user.tokenExp || isExpired) {
+    return next(
+      new AppError(
+        "Failed to reset password. Token is invalid or expired.",
+        400
+      )
+    );
   }
 
   user.password = password;
+  user.passwordChangedAt = Date.now();
   user.passwordResetToken = undefined;
   user.tokenExp = undefined;
 
-  await user.save();
-
-  // Optionally, update changedPasswordAt to invalidate JWTs issued before now
-  // You may already handle this in pre-save hooks
-
-  CreateSendToken(user, res);
+  try {
+    await user.save({ validateBeforeSave: false });
+  } catch (err) {
+    return next(new AppError("Failed to update password. " + err.message, 500));
+  }
+  res.status(200).json({
+    status: "success",
+    message: "Password reset successful. You can now log in.",
+  });
 });
 
 const updatePassword = catchAsync(async (req, res, next) => {

@@ -35,7 +35,7 @@ router.route("resend-verification").post(resendVerificationLink);
 
 router.route("/forgotpassword").post(forgottenPassword);
 
-router.route("/reset-password/:token").patch(resetPassword);
+router.route("/reset-password/:token").post(resetPassword);
 
 router.route("/updatepassword").patch(Protect, updatePassword);
 

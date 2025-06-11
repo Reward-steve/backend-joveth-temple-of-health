@@ -38,11 +38,11 @@ const changedPasswordAfter = function (timestamp) {
 };
 
 const createPasswordResetToken = function () {
-  const resetToken = crypto.randomBytes(32).toString("hex"); //reset token
-
-  //encrypted reset token
+  const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = hashedToken(resetToken);
-  this.tokenExp = process.env.JWT_EXPIRES_IN; //token expires in
+
+  // Set token to expire in 10 minutes
+  this.tokenExp = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
 };
